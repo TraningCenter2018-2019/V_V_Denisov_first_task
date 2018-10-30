@@ -9,7 +9,7 @@ before_install:
 
 script:
   - ls -l $TRAVIS_BUILD_DIR 
-  - docker run -it -v $TRAVIS_BUILD_DIR:/documents/ asciidoctor/docker-asciidoctor  asciidoctor -D /documents/output doc/*.adoc
+  - docker run -it -v $TRAVIS_BUILD_DIR:/documents/ asciidoctor/docker-asciidoctor  asciidoctor -r asciidoctor-diagram -D /documents/output doc/*.adoc
 
 after_error: 
   - docker logs asciidoctor
