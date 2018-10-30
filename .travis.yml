@@ -24,4 +24,4 @@ after_success:
   - git config user.email "stariwan@yandex.ru"
   - git add . ; git commit -m "Deploy to GitHub Pages"
   - git checkout -b gh-pages
-  - git push --force --quiet "https://d3cee0f873b207321ec42873724aacc732c1e4d5@github.com/TraningCenter2018-2019/V_V_Denisov_first_task.git" gh-pages
+  - git push --force --quiet "https://4b1e06a4afaaef2ff98b1107ddfbe55576cca6e1@github.com/TraningCenter2018-2019/V_V_Denisov_first_task.git" gh-pages
