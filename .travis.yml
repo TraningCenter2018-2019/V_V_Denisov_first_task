@@ -9,13 +9,13 @@ before_install:
 
 script:
   - ls -l $TRAVIS_BUILD_DIR 
-  - docker run -it -v $TRAVIS_BUILD_DIR:/documents/ asciidoctor/docker-asciidoctor  asciidoctor-diagram doc/*.adoc
+  - docker run -it -v $TRAVIS_BUILD_DIR:/documents/ asciidoctor/docker-asciidoctor  asciidoctor doc/*.adoc
 
 after_error: 
-  - docker logs asciidoc-to-html
+  - docker logs asciidoctor
 
 after_failure:
-  - docker logs asciidoc-to-html
+  - docker logs asciidoctor
 
 after_success:      
   - cd output ;  ls -l ;mv README.html index.html;
