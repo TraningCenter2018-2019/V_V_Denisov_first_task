@@ -17,5 +17,5 @@ after_failure:
   - docker logs asciidoc-to-html
 
 after_success:      
-  - cd output ; mv README.html index.html ;
+  - cd output ; mv README.html index.html;
 
