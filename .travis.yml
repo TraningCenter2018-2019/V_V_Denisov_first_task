@@ -19,4 +19,5 @@ after_failure:
 
 after_success:      
   - ls -l 
+  - cd output; ls -l
 
