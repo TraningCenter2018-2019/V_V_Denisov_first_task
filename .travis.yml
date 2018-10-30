@@ -1,0 +1,21 @@
+sudo: required
+
+services:
+ - docker
+
+before_install:
+ - mkdir -p output
+ - docker pull asciidoctor/docker-asciidoctor
+
+script:
+  - docker run -v $TRAVIS_BUILD_DIR:/doc/ --name asciidoc-to-html asciidoctor/docker-asciidoctor asciidoctor -D /documents/output *.adoc
+
+after_error: 
+  - docker logs asciidoc-to-html
+
+after_failure:
+  - docker logs asciidoc-to-html
+
+after_success:      
+  - cd output ; mv README.html index.html ;
+
