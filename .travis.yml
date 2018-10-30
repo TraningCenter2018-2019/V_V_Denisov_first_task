@@ -18,5 +18,5 @@ after_failure:
   - docker logs asciidoctor
 
 after_success:      
-  - cd output ;  ls -l ;mv README.html index.html;
+  - ls -l 
 
