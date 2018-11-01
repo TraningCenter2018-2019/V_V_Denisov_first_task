@@ -1,0 +1,27 @@
+sudo: required
+
+services:
+ - docker
+
+before_install:
+ - mkdir -p output
+ - docker pull asciidoctor/docker-asciidoctor
+
+script:
+  - ls -l $TRAVIS_BUILD_DIR 
+  - docker run -it -v $TRAVIS_BUILD_DIR:/documents/ asciidoctor/docker-asciidoctor  asciidoctor -r asciidoctor-diagram -D /documents/output doc/*.adoc
+
+after_error: 
+  - docker logs asciidoctor
+
+after_failure:
+  - docker logs asciidoctor
+
+after_success:      
+  - cd output ; mv analysis.html index.html
+  - git init
+  - git config user.name "ivanStarikov"
+  - git config user.email "stariwan@yandex.ru"
+  - git add . ; git commit -m "Deploy to GitHub Pages"
+  - git checkout -b gh-pages
+  - git push --force --quiet "https://${GH_TOKEN}@github.com/TraningCenter2018-2019/V_V_Denisov_first_task" gh-pages
