@@ -1,0 +1,272 @@
+.Задачу "Канадский кроссворд" можно разбить на три модуля:
+
+. Модуль логики Кроссворда (link:..\umlDiagrams\Crossword.adoc[модуль `Crossword`])
+. Модуль отображения (link:..\umlDiagrams\View.adoc[модуль `View`])
+. Модуль связи логики и отображения (link:..\umlDiagrams\Mediator.adoc[модуль `Mediator`])
+
+Диаграммы этих модулей в следующих файлах:
+
+* link:..\umlDiagrams\Crossword.adoc[Crossword.adoc]
+* link:..\umlDiagrams\View.adoc[View.adoc]
+* link:..\umlDiagrams\Mediator.adoc[Mediator.adoc]
+
+NOTE: Часть диаграмм дублируется в этом файле. Полные версии диаграмм, включая реализации интерфейсов, изложены в файлах выше.
+
+Рассмотрим подробнее. +
+
+== Начнём с модуля логики Кроссворда (`Crossword`). +
+
+[plantuml, diagram-classes, png]
+----
+package java.lang {
+	class Exception {
+	}
+}
+
+interface Configuration<T> {
+	+String getName()
+	+T getValue()
+}
+
+interface Configurator {
+	..getters and setters..
+	+Configuration getConfigurationByName(String name)
+	+void addOrReplaceConfiguration(Configuration newConfig)
+	~CrosswordData getCrosswordData()
+	+CrosswordValidator getCrosswordValidator()
+	+CrosswordMaker getCrosswordMaker()
+}
+
+interface CrosswordMaker {
+	+void setConfigurations(Configurator configurations)
+	+CrosswordData buildCrossword() throws ConfigurationException
+}
+
+interface CrosswordValidator {
+	+void setRightSolution(CrosswordData rightSolution)
+	+SolutionResult checkSolution(CrosswordData newSolution)
+}
+
+interface SolutionResult {
+	+double getResultInPercentage()
+	+List<WordInfo> getFoundWords()
+	+List<WordInfo> getUnfoundWords()
+	+List<WordInfo> getAllWords()
+}
+
+class ConfigurationException {
+}
+
+interface Cell {
+	+char getSymbol()
+	+void setSymbol(char c)
+	+boolean isRestricted()
+	+void setRestricted(boolean restricted)
+}
+	
+interface CrosswordData {
+	+Cell get(int x, int y)
+	+void set(int x, int y, Cell c)
+	+List<WordInfo> getSolution()
+	+void setSolution(List<WordInfo> dict)
+}
+
+interface WordInfo {
+	+int getX()
+	+void setX(int x)
+	+int getY()
+	+void setY(int y)
+	+String getDescription()
+	+void setDescription(String description)
+	+String getWord()
+	+void setWord(String description)
+	+WordDirection getWordDirection()
+	+void setWordDirection(WordDirection direction)
+}
+
+enum WordDirection {
+	Horizontal,
+	Vertical
+}
+
+CrosswordData o-- Cell
+CrosswordValidator --> CrosswordData
+Configurator o--> CrosswordValidator
+Configurator o--> CrosswordData
+Configurator o--o CrosswordMaker
+Configurator o--> Configuration
+ConfigurationException --|> Exception
+CrosswordValidator --> SolutionResult
+SolutionResult o--> CrosswordData
+SolutionResult --> WordInfo
+CrosswordMaker --> CrosswordData
+CrosswordMaker --> ConfigurationException
+CrosswordData o--> WordInfo
+WordInfo --> WordDirection
+----
+
+Класс ячейки кроссворда - `Cell` - хранит информацию о состоянии ячейки. 
+Характеристики ячейки: хранимый символ (может быть цифра, буква, символ ограничения). +
+
+Класс `CrosswordData` хранит данные о содержании кроссворда: о каждой его ячейке и её характеристиках. +
+Также этот класс хранит информацию об искомых словах - определение слова, само слово, его координаты, его направление.
+
+Класс `WordInfo` хранит информацию об искомом слове. Он использует перечисление `WordDirection`.
+
+Класс `CrosswordValidator` используется для проверки решенного кроссворда.
+Для этих целей он хранит в себе ссылку на правильное решение.
+
+Результат работы валидатора - объект класса `SolutionResult`. Этот класс предоставляет результаты сравнения решённого пользователем кроссворда
+и правильного решения. На основе предоставленных данных, класс позволяет получить списки найденных / не найденных / всех слов из кроссворда, а
+также полноту решения в процентах.
+
+Созданием (генерацией) кроссворда занимается класс `CrosswordMaker`. Он может не создать кроссворд из-за различных ошибок конфигурации - в этом случае
+он выбрасывает исключение `ConfigurationException` (одного из наследников). Передаёт правильное решение в `Configurator` (имеет на него ссылку).
+
+Класс конфигуратора - `Configurator` - самый главный класс этого модуля. Он хранит в себе множество данных кроссворда. 
+Все данные кроссворда задаются в виде объектов `Configuration` - таким образом при добавлении новых настроек, класс не будет требовать изменений.
+Этот класс подробнее:
+[plantuml, diagram-classes, png]
+----
+interface TableView {
+	+void print()
+	+OutputStream getRemoteOutputStream()
+	+InputStream getRemoteInputStream()
+	+PrintableData getPrintableData()
+}
+
+interface ViewFactory {
+	+OutputStream createRemoteOutputStream()
+	+InputStream createRemoteInputStream()
+	+PrintableData createPrintableData()
+}
+
+interface PrintableData {
+	+char get(int x, int y)
+	+char set(int x, int y, char c)
+}
+
+ViewFactory o--> PrintableData
+TableView o--> PrintableData
+----
+
+Рассмотрим представленные классы:
+`PrintableData` - класс данных, которые могут быть легко отображены модулем.
+
+`TableView` - класс отображения данных в виде таблицы (сетки). Способен выводить объекты `PrintableData`.
+Ответственен за взаимодействия со сторонними библиотеками вывода в консоль.
+
+`ViewFactory` - фабрика для настройки отображения. Наследники этого класса позволяют настроить потоки ввода и вывода, а также установить
+объект для вывода (ссылка на этот объект может храниться также в другом классе для их синхронного изменения, а затем отображения).
+
+== Модуль связи логики и отображения (`Mediator`):
+
+[plantuml, diagram-classes, png]
+----
+package Crossword {
+	interface Configurator {
+		..getters and setters..
+		+Configuration getConfigurationByName(String name)
+		+void addOrReplaceConfiguration(Configuration newConfig)
+		~CrosswordData getCrosswordData()
+		+CrosswordValidator getCrosswordValidator()
+		..methods..
+		+CrosswordMaker getCrosswordMaker()
+	}
+}
+
+package View {
+	interface TableView {
+		+void print()
+		+OutputStream getRemoteOutputStream()
+		+InputStream getRemoteInputStream()
+		+HasTablePrintableData getPrintableData()
+	}
+	
+	interface PrintableData {
+		+char get(int x, int y)
+		+char set(int x, int y, char c)
+	}
+}
+
+class CrosswordStartPoint {
+	-static CrosswordManager manager
+	+static void main(String[] args)
+}
+
+interface CrosswordManager {
+	..getters..
+	+Configurator getConfigurator()
+	+TableView getTableView()
+	+PrintableData getPrintableData()
+	..methods..
+	+void start()
+}
+
+class CrosswordManagerImpl {
+	-Configurator configurator
+	-TableView view
+	-PrintableData data
+	-Map<String, Command> commandDictionary
+	__
+	..getters..
+	+Configurator getConfigurator()
+	+TableView getTableView()
+	+PrintableData getPrintableData()
+	..methods..
+	+void start()
+	-void createCommands()
+}
+
+interface Command {
+	+void execute()
+}
+
+CrosswordStartPoint --> CrosswordManager
+CrosswordManager o--> Configurator
+CrosswordManager o--> TableView
+CrosswordManager o--> PrintableData
+CrosswordManagerImpl ..|> CrosswordManager
+CrosswordManagerImpl o--> Command
+----
+
+NOTE: Класс `CrosswordStartPoint` является стартовым классом в проекте.
+
+Этот класс создаёт объект класса `CrosswordManager`. 
+
+`CrosswordManager` ответственен за обработку ввода и вывода в программе, а также за поддержку связи между отображением и данными (логикой).
+
+Использует для обработки различных сценариев использования программы наследников класса `Command`.
+
+Наследники `Command`:
+[plantuml, diagram-classes, png]
+----
+interface Command {
+	+void execute()
+}
+
+abstract class CrosswordManagerCommand {
+	-CrosswordManager manager
+	+CrosswordManagerCommand(CrosswordManager manager)
+}
+
+class ConfigurationCommand {
+	+void execute()
+}
+
+class SolveCommand {
+	+void execute()
+}
+
+CrosswordManagerCommand ..|> Command
+ConfigurationCommand --|> CrosswordManagerCommand
+SolveCommand --|> CrosswordManagerCommand
+----
+
+Класс `ConfigurationCommand` добавляет в конфигуратор данные.
+В случае, если в конце настройки данные будут подходящие, он сгенерирует кроссворд (иначе - повторит цикл настройки).
+
+Класс `SolveCommand` обеспечивает процесс решения кроссворда - считывание данных из потока ввода, предоставленного модулем отображения,
+печать текущего состояния кроссворда.
+
+По завершении ввода он проверяет правильность решения кроссворда (получая валидатор через конфигуратор) и выводит результат.

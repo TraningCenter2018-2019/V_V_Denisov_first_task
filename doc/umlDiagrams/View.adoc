@@ -1,0 +1,54 @@
+[plantuml, diagram-classes, png]
+----
+interface TableView {
+	+void print()
+	+OutputStream getRemoteOutputStream()
+	+InputStream getRemoteInputStream()
+	+PrintableData getPrintableData()
+}
+
+class TableViewImpl {
+	__
+	..override..
+	+void print()
+	+OutputStream getRemoteOutputStream()
+	+InputStream getRemoteInputStream()
+	+PrintableData getPrintableData()
+	..methods..
+	+TableViewImpl(ViewFactory factory)
+}
+
+interface ViewFactory {
+	+OutputStream createRemoteOutputStream()
+	+InputStream createRemoteInputStream()
+	+PrintableData createPrintableData()
+}
+
+abstract class ConsoleViewFactory {
+	+OutputStream createRemoteOutputStream()
+	+InputStream createRemoteInputStream()
+}
+
+class ConsolePrintableViewFactory {
+	+ConsolePrintableViewFactory(PrintableData data)
+	+PrintableData createPrintableData()
+}
+
+interface PrintableData {
+	+char get(int x, int y)
+	+char set(int x, int y, char c)
+}
+
+class TablePrintableData {
+	-char[][] data
+	+char get(int x, int y)
+	+char set(int x, int y, char c)
+}
+
+TableViewImpl ..|> TableView
+ConsolePrintableViewFactory --|> ConsoleViewFactory
+ConsoleViewFactory ..|> ViewFactory
+TablePrintableData ..|> PrintableData
+ViewFactory o--> PrintableData
+TableView o--> PrintableData
+----

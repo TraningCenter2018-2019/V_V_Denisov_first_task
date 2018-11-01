@@ -1,0 +1,317 @@
+[plantuml, diagram-classes, png]
+----
+package java.lang {
+	class Exception {
+	}
+}
+
+interface Configuration<T> {
+	+String getName()
+	+T getValue()
+}
+
+interface Configurator {
+	..getters and setters..
+	+Configuration getConfigurationByName(String name)
+	+void addOrReplaceConfiguration(Configuration newConfig)
+	~CrosswordData getCrosswordData()
+	+CrosswordValidator getCrosswordValidator()
+	+CrosswordMaker getCrosswordMaker()
+}
+
+interface CrosswordMaker {
+	+void setConfigurations(Configurator configurations)
+	+CrosswordData buildCrossword() throws ConfigurationException
+}
+
+interface CrosswordValidator {
+	+void setRightSolution(CrosswordData rightSolution)
+	+SolutionResult checkSolution(CrosswordData newSolution)
+}
+
+interface SolutionResult {
+	+double getResultInPercentage()
+	+List<WordInfo> getFoundWords()
+	+List<WordInfo> getUnfoundWords()
+	+List<WordInfo> getAllWords()
+}
+
+class ConfigurationException {
+}
+
+interface Cell {
+	+char getSymbol()
+	+void setSymbol(char c)
+	+boolean isRestricted()
+	+void setRestricted(boolean restricted)
+}
+	
+interface CrosswordData {
+	+Cell get(int x, int y)
+	+void set(int x, int y, Cell c)
+	+List<WordInfo> getSolution()
+	+void setSolution(List<WordInfo> dict)
+}
+
+interface WordInfo {
+	+int getX()
+	+void setX(int x)
+	+int getY()
+	+void setY(int y)
+	+String getDescription()
+	+void setDescription(String description)
+	+String getWord()
+	+void setWord(String description)
+	+WordDirection getWordDirection()
+	+void setWordDirection(WordDirection direction)
+}
+
+enum WordDirection {
+	Horizontal,
+	Vertical
+}
+
+CrosswordData o-- Cell
+CrosswordValidator --> CrosswordData
+Configurator o--> CrosswordValidator
+Configurator o--> CrosswordData
+Configurator o--o CrosswordMaker
+Configurator o--> Configuration
+ConfigurationException --|> Exception
+CrosswordValidator --> SolutionResult
+SolutionResult o--> CrosswordData
+SolutionResult --> WordInfo
+CrosswordMaker --> CrosswordData
+CrosswordMaker --> ConfigurationException
+CrosswordData o--> WordInfo
+WordInfo --> WordDirection
+----
+
+Configuration:
+[plantuml, diagram-classes, png]
+----
+interface Configuration<T> {
+	+String getName()
+	+T getValue()
+}
+
+class SizeConfiguration<Integer[]> {
+	+String getName()
+	+Integer[] getValue()
+}
+
+class DictionaryConfiguration<Map<String, String>> {
+	+String getName()
+	+Map<String, String> getValue()
+}
+
+class RestrictionsConfiguration<Integer[][]> {
+	+String getName()
+	+Integer[][] getValue()
+}
+SizeConfiguration ..|> Configuration
+DictionaryConfiguration ..|> Configuration
+RestrictionsConfiguration ..|> Configuration
+----
+
+ConfigurationException:
+[plantuml, diagram-classes, png]
+----
+
+package java.lang {
+	class Exception {
+	}
+}
+
+class ConfigurationException {
+}
+
+class SizeIsNotAppropriateException {
+}
+
+class DictionaryIsEmptyException {
+}
+
+class RestrictionsAreNotAppropriateException {
+}
+SizeIsNotAppropriateException --|> ConfigurationException
+DictionaryIsEmptyException --|> ConfigurationException
+RestrictionsAreNotAppropriateException --|> ConfigurationException
+ConfigurationException --|> Exception
+----
+
+Configurator:
+[plantuml, diagram-classes, png]
+----
+interface Configurator {
+	..getters and setters..
+	+Configuration getConfigurationByName(String name)
+	+void addOrReplaceConfiguration(Configuration newConfig)
+	~CrosswordData getCrosswordData()
+	+CrosswordValidator getCrosswordValidator()
+	+CrosswordMaker getCrosswordMaker()
+}
+
+class DefaultConfigurator {
+	-int[2] size
+	-Map<String, String> dictionary
+	-int[][2] restrictions
+	-CrosswordData cwData
+	-CrosswordValidator cwValidator
+	-CrosswordMaker crosswordMaker
+	__
+	..overrides..
+	+Configuration getConfigurationByName(String name)
+	+void addOrReplaceConfiguration(Configuration newConfig)
+	~CrosswordData getCrosswordData()
+	+CrosswordValidator getCrosswordValidator()
+	+CrosswordMaker getCrosswordMaker()
+	..getters and setters..
+	+int[2] getSize()
+	+void setSize(int w, int h)
+	+List<WordInfo> getDictionary()
+	+void setDictionary(List<WordInfo> dict)
+	+int[][2] getRestrictions()
+	+void setRestrictions(int[][] restrictions)
+}
+
+DefaultConfigurator ..|> Configurator
+----
+
+CrosswordMaker:
+[plantuml, diagram-classes, png]
+----
+interface CrosswordMaker {
+	+void setConfigurations(Configurator configurations)
+	+CrosswordData buildCrossword() throws ConfigurationException
+}
+	
+class CrosswordMakerImpl {
+	+void setConfigurations(Configurator configurations)
+	+CrosswordData buildCrossword() throws ConfigurationException
+}
+	
+CrosswordMakerImpl ..|> CrosswordMaker
+----
+
+CrosswordValidator:
+[plantuml, diagram-classes, png]
+----
+interface CrosswordValidator {
+	+void setRightSolution(CrosswordData rightSolution)
+	+SolutionResult checkSolution(CrosswordData newSolution)
+}
+	
+class CrosswordValidatorImpl {
+	+void setRightSolution(CrosswordData rightSolution)
+	+SolutionResult checkSolution(CrosswordData newSolution)
+}
+	
+CrosswordValidatorImpl ..|> CrosswordValidator
+----
+
+SolutionResult:
+[plantuml, diagram-classes, png]
+----	
+interface SolutionResult {
+	+double getResultInPercentage()
+	+Map<String, String> getFoundWords()
+	+Map<String, String> getUnfoundWords()
+	+Map<String, String> getAllWords()
+}
+	
+class SolutionResultImpl {
+	-CrosswordData original
+	-CrosswordData solution
+	+double getResultInPercentage()
+	+Map<String, String> getFoundWords()
+	+Map<String, String> getUnfoundWords()
+	+Map<String, String> getAllWords()
+}
+	
+SolutionResultImpl ..|> SolutionResult
+----
+
+Cell:
+[plantuml, diagram-classes, png]
+----
+interface Cell {
+	+char getSymbol()
+	+void setSymbol(char c)
+	+boolean isRestricted()
+	+void setRestricted(boolean restricted)
+}
+	
+class DefaultCell {
+	-char symbol
+	-boolean restricted
+	+char getSymbol()
+	+void setSymbol(char c)
+	+boolean isRestricted()
+	+void setRestricted(boolean restricted)
+}
+	
+DefaultCell ..|> Cell
+----
+
+CrosswordData:
+[plantuml, diagram-classes, png]
+----
+interface CrosswordData {
+	+Cell get(int x, int y)
+	+void set(int x, int y, Cell c)
+	+List<WordInfo> getSolution()
+	+void setSolution(List<WordInfo> dict)
+}
+	
+class CrosswordTableData {
+	-List<WordInfo> solution
+	-Cell[][] data
+	+CrosswordData()
+	+CrosswordData(List<WordInfo> solution)
+	+Cell get(int x, int y)
+	+void set(int x, int y, char c)
+	+List<WordInfo> getSolution()
+	+void setSolution(List<WordInfo> dict)
+}
+	
+CrosswordTableData ..|> CrosswordData
+----
+
+WordInfo:
+[plantuml, diagram-classes, png]
+----
+interface WordInfo {
+	+int getX()
+	+void setX(int x)
+	+int getY()
+	+void setY(int y)
+	+String getDescription()
+	+void setDescription(String description)
+	+String getWord()
+	+void setWord(String description)
+	+WordDirection getWordDirection()
+	+void setWordDirection(WordDirection direction)
+}
+
+class WordInfoImpl {
+	-String description
+	-String word
+	-int x
+	-int y
+	-WordDirection direction
+	__
+	+int getX()
+	+void setX(int x)
+	+int getY()
+	+void setY(int y)
+	+String getDescription()
+	+void setDescription(String description)
+	+String getWord()
+	+void setWord(String description)
+	+WordDirection getWordDirection()
+	+void setWordDirection(WordDirection direction)
+}
+
+WordInfoImpl ..|> WordInfo
+----
