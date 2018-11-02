@@ -1,0 +1,11 @@
+.Задачу "Канадский кроссворд" можно разбить на три модуля:
+
+. Модуль логики Кроссворда (link:sections\Crossword.adoc[модуль `Crossword`])
+. Модуль отображения (link:sections\View.adoc[модуль `View`])
+. Модуль связи логики и отображения (link:sections\Mediator.adoc[модуль `Mediator`])
+
+Обзор этих модулей в следующих файлах:
+
+* link:sections\Crossword.adoc[Crossword.adoc]
+* link:sections\View.adoc[View.adoc]
+* link:sections\Mediator.adoc[Mediator.adoc]

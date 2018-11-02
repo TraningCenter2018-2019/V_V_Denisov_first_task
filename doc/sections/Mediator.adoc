@@ -1,0 +1,116 @@
+Вернуться обратно в файл анализа: link:..\analysis.adoc[analysis.adoc]
+
+NOTE: Часть диаграмм дублируется в этом файле. Полные версии диаграмм, включая реализации интерфейсов, 
+изложены link:..\umlDiagrams\Mediator.adoc[здесь].
+
+== Модуль связи логики и отображения (`Mediator`):
+
+[plantuml, diagram-classes, png]
+----
+package Crossword {
+	interface Configurator {
+		..getters and setters..
+		+Configuration getConfigurationByName(String name)
+		+void addOrReplaceConfiguration(Configuration newConfig)
+		~CrosswordData getCrosswordData()
+		+CrosswordValidator getCrosswordValidator()
+		..methods..
+		+CrosswordMaker getCrosswordMaker()
+	}
+}
+
+package View {
+	interface TableView {
+		+void print()
+		+OutputStream getRemoteOutputStream()
+		+InputStream getRemoteInputStream()
+		+HasTablePrintableData getPrintableData()
+	}
+	
+	interface PrintableData {
+		+char get(int x, int y)
+		+char set(int x, int y, char c)
+	}
+}
+
+class CrosswordStartPoint {
+	-static CrosswordManager manager
+	+static void main(String[] args)
+}
+
+interface CrosswordManager {
+	..getters..
+	+Configurator getConfigurator()
+	+TableView getTableView()
+	+PrintableData getPrintableData()
+	..methods..
+	+void start()
+}
+
+class CrosswordManagerImpl {
+	-Configurator configurator
+	-TableView view
+	-PrintableData data
+	-Map<String, Command> commandDictionary
+	__
+	..getters..
+	+Configurator getConfigurator()
+	+TableView getTableView()
+	+PrintableData getPrintableData()
+	..methods..
+	+void start()
+	-void createCommands()
+}
+
+interface Command {
+	+void execute()
+}
+
+CrosswordStartPoint --> CrosswordManager
+CrosswordManager o--> Configurator
+CrosswordManager o--> TableView
+CrosswordManager o--> PrintableData
+CrosswordManagerImpl ..|> CrosswordManager
+CrosswordManagerImpl o--> Command
+----
+
+NOTE: Класс `CrosswordStartPoint` является стартовым классом в проекте.
+
+Этот класс создаёт объект класса `CrosswordManager`. 
+
+`CrosswordManager` ответственен за обработку ввода и вывода в программе, а также за поддержку связи между отображением и данными (логикой).
+
+Использует для обработки различных сценариев использования программы наследников класса `Command`.
+
+Наследники `Command`:
+[plantuml, diagram-classes, png]
+----
+interface Command {
+	+void execute()
+}
+
+abstract class CrosswordManagerCommand {
+	-CrosswordManager manager
+	+CrosswordManagerCommand(CrosswordManager manager)
+}
+
+class ConfigurationCommand {
+	+void execute()
+}
+
+class SolveCommand {
+	+void execute()
+}
+
+CrosswordManagerCommand ..|> Command
+ConfigurationCommand --|> CrosswordManagerCommand
+SolveCommand --|> CrosswordManagerCommand
+----
+
+Класс `ConfigurationCommand` добавляет в конфигуратор данные.
+В случае, если в конце настройки данные будут подходящие, он сгенерирует кроссворд (иначе - повторит цикл настройки).
+
+Класс `SolveCommand` обеспечивает процесс решения кроссворда - считывание данных из потока ввода, предоставленного модулем отображения,
+печать текущего состояния кроссворда.
+
+По завершении ввода он проверяет правильность решения кроссворда (получая валидатор через конфигуратор) и выводит результат.
