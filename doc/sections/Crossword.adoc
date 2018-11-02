@@ -1,0 +1,116 @@
+Вернуться обратно в файл анализа: link:..\analysis.adoc[analysis.adoc]
+
+NOTE: Часть диаграмм дублируется в этом файле. Полные версии диаграмм, включая реализации интерфейсов, 
+изложены link:..\umlDiagrams\Crossword.adoc[здесь].
+
+== Модуль логики Кроссворда (`Crossword`). +
+
+[plantuml, diagram-classes, png]
+----
+package java.lang {
+	class Exception {
+	}
+}
+
+interface Configuration<T> {
+	+String getName()
+	+T getValue()
+}
+
+interface Configurator {
+	..getters and setters..
+	+Configuration getConfigurationByName(String name)
+	+void addOrReplaceConfiguration(Configuration newConfig)
+	~CrosswordData getCrosswordData()
+	+CrosswordValidator getCrosswordValidator()
+	+CrosswordMaker getCrosswordMaker()
+}
+
+interface CrosswordMaker {
+	+void setConfigurations(Configurator configurations)
+	+CrosswordData buildCrossword() throws ConfigurationException
+}
+
+interface CrosswordValidator {
+	+void setRightSolution(CrosswordData rightSolution)
+	+SolutionResult checkSolution(CrosswordData newSolution)
+}
+
+interface SolutionResult {
+	+double getResultInPercentage()
+	+List<WordInfo> getFoundWords()
+	+List<WordInfo> getUnfoundWords()
+	+List<WordInfo> getAllWords()
+}
+
+class ConfigurationException {
+}
+
+interface Cell {
+	+char getSymbol()
+	+void setSymbol(char c)
+	+boolean isRestricted()
+	+void setRestricted(boolean restricted)
+}
+	
+interface CrosswordData {
+	+Cell get(int x, int y)
+	+void set(int x, int y, Cell c)
+	+List<WordInfo> getSolution()
+	+void setSolution(List<WordInfo> dict)
+}
+
+interface WordInfo {
+	+int getX()
+	+void setX(int x)
+	+int getY()
+	+void setY(int y)
+	+String getDescription()
+	+void setDescription(String description)
+	+String getWord()
+	+void setWord(String description)
+	+WordDirection getWordDirection()
+	+void setWordDirection(WordDirection direction)
+}
+
+enum WordDirection {
+	Horizontal,
+	Vertical
+}
+
+CrosswordData o-- Cell
+CrosswordValidator --> CrosswordData
+Configurator o--> CrosswordValidator
+Configurator o--> CrosswordData
+Configurator o--o CrosswordMaker
+Configurator o--> Configuration
+ConfigurationException --|> Exception
+CrosswordValidator --> SolutionResult
+SolutionResult o--> CrosswordData
+SolutionResult --> WordInfo
+CrosswordMaker --> CrosswordData
+CrosswordMaker --> ConfigurationException
+CrosswordData o--> WordInfo
+WordInfo --> WordDirection
+----
+
+Класс ячейки кроссворда - `Cell` - хранит информацию о состоянии ячейки. 
+Характеристики ячейки: хранимый символ (может быть цифра, буква, символ ограничения). +
+
+Класс `CrosswordData` хранит данные о содержании кроссворда: о каждой его ячейке и её характеристиках. +
+Также этот класс хранит информацию об искомых словах - определение слова, само слово, его координаты, его направление.
+
+Класс `WordInfo` хранит информацию об искомом слове. Он использует перечисление `WordDirection`.
+
+Класс `CrosswordValidator` используется для проверки решенного кроссворда.
+Для этих целей он хранит в себе ссылку на правильное решение.
+
+Результат работы валидатора - объект класса `SolutionResult`. Этот класс предоставляет результаты сравнения решённого пользователем кроссворда
+и правильного решения. На основе предоставленных данных, класс позволяет получить списки найденных / не найденных / всех слов из кроссворда, а
+также полноту решения в процентах.
+
+Созданием (генерацией) кроссворда занимается класс `CrosswordMaker`. Он может не создать кроссворд из-за различных ошибок конфигурации - в этом случае
+он выбрасывает исключение `ConfigurationException` (одного из наследников). Передаёт правильное решение в `Configurator` (имеет на него ссылку).
+
+Класс конфигуратора - `Configurator` - самый главный класс этого модуля. Он хранит в себе множество данных кроссворда. 
+Все данные кроссворда задаются в виде объектов `Configuration` - таким образом при добавлении новых настроек, класс не будет требовать изменений.

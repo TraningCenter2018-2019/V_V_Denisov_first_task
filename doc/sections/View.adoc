@@ -1,0 +1,38 @@
+Вернуться обратно в файл анализа: link:..\analysis.adoc[analysis.adoc]
+
+NOTE: Часть диаграмм дублируется в этом файле. Полные версии диаграмм, включая реализации интерфейсов, 
+изложены link:..\umlDiagrams\View.adoc[здесь].
+
+== Модуль отображения ('View'):
+[plantuml, diagram-classes, png]
+----
+interface TableView {
+	+void print()
+	+OutputStream getRemoteOutputStream()
+	+InputStream getRemoteInputStream()
+	+PrintableData getPrintableData()
+}
+
+interface ViewFactory {
+	+OutputStream createRemoteOutputStream()
+	+InputStream createRemoteInputStream()
+	+PrintableData createPrintableData()
+}
+
+interface PrintableData {
+	+char get(int x, int y)
+	+char set(int x, int y, char c)
+}
+
+ViewFactory o--> PrintableData
+TableView o--> PrintableData
+----
+
+Рассмотрим представленные классы:
+`PrintableData` - класс данных, которые могут быть легко отображены модулем.
+
+`TableView` - класс отображения данных в виде таблицы (сетки). Способен выводить объекты `PrintableData`.
+Ответственен за взаимодействия со сторонними библиотеками вывода в консоль.
+
+`ViewFactory` - фабрика для настройки отображения. Наследники этого класса позволяют настроить потоки ввода и вывода, а также установить
+объект для вывода (ссылка на этот объект может храниться также в другом классе для их синхронного изменения, а затем отображения).
